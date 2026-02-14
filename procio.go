@@ -5,6 +5,8 @@ package procio
 type Observer interface {
 	OnProcessStarted(pid int)
 	OnProcessFailed(err error)
+	OnIOError(op string, err error)
+	OnScanError(err error)
 	LogDebug(msg string, args ...any)
 	LogWarn(msg string, args ...any)
 	LogError(msg string, args ...any)
@@ -31,6 +33,8 @@ type noopObserver struct{}
 
 func (noopObserver) OnProcessStarted(int)    {}
 func (noopObserver) OnProcessFailed(error)   {}
+func (noopObserver) OnIOError(string, error) {}
+func (noopObserver) OnScanError(error)       {}
 func (noopObserver) LogDebug(string, ...any) {}
 func (noopObserver) LogWarn(string, ...any)  {}
 func (noopObserver) LogError(string, ...any) {}

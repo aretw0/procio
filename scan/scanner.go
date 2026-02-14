@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aretw0/procio"
 	"github.com/aretw0/procio/termio"
 )
 
@@ -22,7 +23,6 @@ type Scanner struct {
 	onLine     func(line string)
 	onClear    func()
 	onError    func(err error)
-	onFullStop func()
 }
 
 // Option configures the Scanner.
@@ -154,6 +154,9 @@ func (s *Scanner) handleReadError(err error, lineBuilder *strings.Builder) bool 
 	// Other errors: Log and retry with backoff
 	if s.onError != nil {
 		s.onError(err)
+	} else {
+		procio.GetObserver().OnScanError(err)
+		procio.GetObserver().LogWarn("scan read error", "error", err)
 	}
 	time.Sleep(s.backoff)
 	return false

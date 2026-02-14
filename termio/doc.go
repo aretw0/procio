@@ -8,6 +8,8 @@
 //   - Open: Platform-safe terminal opening (uses CONIN$ on Windows).
 //   - Upgrade: Automatic detection and upgrade of readers to terminal-aware handles.
 //
+// InterruptibleReader is cancellation-aware; the underlying Read() call can still block.
+//
 // # Safety
 //
 // The [InterruptibleReader] uses a "Shielded Return" strategy. If data arrives

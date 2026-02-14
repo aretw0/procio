@@ -6,7 +6,7 @@
 //
 // Usage:
 //
-//	ctx := context.Background()
-//	cmd := proc.Start(ctx, "ping", "google.com")
+//	cmd := exec.Command("ping", "google.com")
+//	_ = proc.Start(cmd)
 //	cmd.Wait()
 package proc
