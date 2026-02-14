@@ -43,3 +43,19 @@ func ExampleNewScanner() {
 	// Run in a goroutine if you need non-blocking start
 	go scanner.Start(ctx)
 }
+
+func ExampleNewScanner_interruptible() {
+	// WithInterruptible combines termio.Upgrade + InterruptibleReader
+	// so context cancellation works even on blocking terminal reads.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	scanner := scan.NewScanner(os.Stdin,
+		scan.WithInterruptible(),
+		scan.WithLineHandler(func(line string) {
+			fmt.Println("User typed:", line)
+		}),
+	)
+
+	go scanner.Start(ctx)
+}

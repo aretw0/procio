@@ -14,15 +14,16 @@ import (
 // Scanner reads lines from an io.Reader (like Stdin) with robust error handling
 // and "Fake EOF" protection for Windows environments.
 type Scanner struct {
-	r          io.Reader
-	bufSize    int
-	backoff    time.Duration
-	eofCount   int
-	threshold  int
-	unsafe     bool
-	onLine     func(line string)
-	onClear    func()
-	onError    func(err error)
+	r             io.Reader
+	bufSize       int
+	backoff       time.Duration
+	eofCount      int
+	threshold     int
+	unsafe        bool
+	interruptible bool
+	onLine        func(line string)
+	onClear       func()
+	onError       func(err error)
 }
 
 // Option configures the Scanner.
@@ -80,6 +81,17 @@ func WithErrorHandler(fn func(err error)) Option {
 	}
 }
 
+// WithInterruptible enables automatic terminal upgrade and interruptible reads.
+// When enabled, Start will attempt to upgrade the reader via termio.Upgrade
+// and wrap it in an InterruptibleReader bound to the context passed to Start.
+// This makes context cancellation effective even when the underlying Read blocks
+// on a real terminal handle.
+func WithInterruptible() Option {
+	return func(s *Scanner) {
+		s.interruptible = true
+	}
+}
+
 // NewScanner creates a new robust scanner.
 func NewScanner(r io.Reader, opts ...Option) *Scanner {
 	s := &Scanner{
@@ -96,6 +108,19 @@ func NewScanner(r io.Reader, opts ...Option) *Scanner {
 
 // Start runs the read loop until context cancellation or persistent failure.
 func (s *Scanner) Start(ctx context.Context) {
+	reader := s.r
+
+	if s.interruptible {
+		upgraded, err := termio.Upgrade(reader)
+		if err != nil {
+			procio.GetObserver().OnIOError("scan.Start.Upgrade", err)
+			procio.GetObserver().LogWarn("scan: failed to upgrade reader, using original", "error", err)
+		} else {
+			reader = upgraded
+		}
+		reader = termio.NewInterruptibleReader(reader, ctx.Done())
+	}
+
 	buffer := make([]byte, s.bufSize)
 	var lineBuilder strings.Builder
 
@@ -104,7 +129,7 @@ func (s *Scanner) Start(ctx context.Context) {
 			return
 		}
 
-		n, err := s.r.Read(buffer)
+		n, err := reader.Read(buffer)
 
 		// Always process read bytes first, even if error occurred
 		if n > 0 {
