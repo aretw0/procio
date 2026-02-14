@@ -10,6 +10,14 @@
 - [x] Decouple dependencies (remove `pkg/core/log`).
 - [x] Stabilize API for initial release.
 
+### v0.1.1 (Composable Primitives & Consolidation)
+
+- [x] **Observer Refactoring:** Generalized interface for standalone I/O events (`OnIOError`, `OnScanError`).
+- [x] **Composability:** Added `scan.WithInterruptible()` for automatic TTY/Context integration.
+- [x] **Messaging Alignment:** Updated docs to prioritize "composable primitives" positioning.
+- [x] **Practical Examples:** Added `composition`, `interruptible`, and `observer` examples.
+- [x] **Test Coverage:** Added end-to-end integration tests.
+
 ### v0.2.0 (Advanced Features)
 
 - [ ] **PTY Support:** Pseudo-terminal primitives for running interactive applications (vim, htop) within processes.
