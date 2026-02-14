@@ -1,13 +1,17 @@
-// Package procio provides robust process and terminal primitives for Go applications.
+// Package procio is the root package for robust process I/O and signaling primitives.
 //
-// It serves as the foundation for the `lifecycle` library but stands alone as a
-// "Hidden Gem" for solving two universal problems in Go:
+// It provides a platform-agnostic way to handle process execution and terminal input
+// with safety guarantees (like leak-free process termination using Job Objects on Windows
+// and Pdeathsig on Linux).
 //
-//  1. Zombie Processes (via pkg/proc): Ensures child processes are terminated when
-//     the parent dies, using platform-specific mechanisms like PDeathSig (Linux)
-//     and Job Objects (Windows).
+// # Subpackages
 //
-//  2. Windows I/O Resilience (via pkg/termio): Provides interruptible readers and
-//     CONIN$ handling to prevent indefinite blocking on Stdin, a common issue
-//     when developing cross-platform CLIs.
+//   - proc: Process management and lifecycle guarantees.
+//   - scan: Context-aware parsing of input streams (Scanner).
+//   - termio: Terminal I/O utilities and interruptible readers.
+//
+// # Observability
+//
+// procio does not depend on any logging library. Instead, it exposes an Observer interface
+// that you can implement to bridge logs and metrics to your preferred system.
 package procio
