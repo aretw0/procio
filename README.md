@@ -1,5 +1,10 @@
 # procio
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/aretw0/procio)](https://goreportcard.com/report/github.com/aretw0/procio)
+[![Go Reference](https://pkg.go.dev/badge/github.com/aretw0/procio.svg)](https://pkg.go.dev/github.com/aretw0/procio)
+[![License](https://img.shields.io/github/license/aretw0/procio.svg?color=red)](./LICENSE)
+[![Release](https://img.shields.io/github/release/aretw0/procio.svg?branch=main)](https://github.com/aretw0/procio/releases)
+
 `procio` is a lightweight, standalone Go module for robust process lifecycle management and interactive I/O.
 
 It provides three core primitives:
