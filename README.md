@@ -37,7 +37,30 @@ err := proc.Start(cmd)
 import "github.com/aretw0/procio/scan"
 
 scanner := scan.NewScanner(os.Stdin)
-scanner.Start(ctx) // Handles transient interrupts; use termio.Upgrade for TTY cancellation
+scanner.Start(ctx) // Handles transient interrupts
+```
+
+### Enabling TTY Cancellation
+
+For interactive CLIs that need Ctrl+C cancellation support:
+
+```go
+import (
+    "context"
+    "github.com/aretw0/procio/scan"
+)
+
+ctx, cancel := context.WithCancel(context.Background())
+defer cancel()
+
+scanner := scan.NewScanner(os.Stdin,
+    scan.WithInterruptible(), // Enables context cancellation via Ctrl+C
+    scan.WithLineHandler(func(line string) {
+        fmt.Println("Got:", line)
+    }),
+)
+
+scanner.Start(ctx) // Returns when context is cancelled or EOF
 ```
 
 ## Observability
