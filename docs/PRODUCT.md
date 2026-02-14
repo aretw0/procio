@@ -2,7 +2,7 @@
 
 ## What is procio?
 
-`procio` (Process I/O) is the foundational layer for building robust, interactive CLI tools and long-running services in Go. It abstracts operating system differences regarding process signaling and terminal behavior, providing a unified, safe API.
+`procio` (Process I/O) is a composable set of primitives for building robust, interactive CLI tools and long-running services in Go. It abstracts operating system differences regarding process signaling and terminal behavior, providing a unified, safe API.
 
 ## Core Value Proposition
 
@@ -12,6 +12,6 @@
 
 ## Target Audience
 
-- CLI Framework Authors (e.g., Cobra extensions)
-- Service Orchestrators
-- Agent Developers
+- CLI tool and framework authors (e.g., Cobra extensions)
+- Service orchestrators
+- Agent and automation developers

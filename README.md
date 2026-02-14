@@ -5,12 +5,12 @@
 [![License](https://img.shields.io/github/license/aretw0/procio.svg?color=red)](./LICENSE)
 [![Release](https://img.shields.io/github/release/aretw0/procio.svg?branch=main)](https://github.com/aretw0/procio/releases)
 
-`procio` is a lightweight, standalone Go module for robust process lifecycle management and interactive I/O.
+`procio` is a lightweight, standalone set of composable primitives for safe process lifecycle and interactive I/O in Go.
 
 It provides three core primitives:
 
 - **proc**: Leak-free process management (ensures child processes die when parent dies).
-- **termio**: Interactive terminal I/O (handling interrupts, raw mode, and virtual terminals).
+- **termio**: Interruptible terminal I/O (handling interrupts and safe terminal handles).
 - **scan**: Robust input scanning with protection against "Fake EOF" signals on Windows.
 
 ## Installation
@@ -37,7 +37,7 @@ err := proc.Start(cmd)
 import "github.com/aretw0/procio/scan"
 
 scanner := scan.NewScanner(os.Stdin)
-scanner.Start(ctx) // Respects context cancellation and handles transient interrupts
+scanner.Start(ctx) // Handles transient interrupts; use termio.Upgrade for TTY cancellation
 ```
 
 ## Observability

@@ -10,6 +10,8 @@ Usage of `procio` is generally configuration-free for simple cases. However, glo
 type Observer interface {
    OnProcessStarted(pid int)
    OnProcessFailed(err error)
+   OnIOError(op string, err error)
+   OnScanError(err error)
    LogDebug(msg string, args ...any)
    LogWarn(msg string, args ...any)
    LogError(msg string, args ...any)
@@ -42,5 +44,5 @@ proc.StrictMode = true
 
 The `scan.Scanner` has internal defaults that can be adjusted via options:
 
-- `WithBuffer(size int)`: Sets the read buffer size.
+- `WithBufferSize(size int)`: Sets the read buffer size.
 - `WithThreshold(count int)`: Sets the consecutive EOF threshold for Windows "fake EOF" detection.
