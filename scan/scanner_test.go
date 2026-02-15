@@ -57,6 +57,15 @@ func (m *MockReader) Read(p []byte) (n int, err error) {
 	return len(chunk), nil
 }
 
+type countingEOFReader struct {
+	count *int
+}
+
+func (r *countingEOFReader) Read(_ []byte) (int, error) {
+	*r.count = *r.count + 1
+	return 0, io.EOF
+}
+
 func TestScanner_PartialReads(t *testing.T) {
 	r := &MockReader{
 		chunks: [][]byte{
@@ -114,49 +123,25 @@ func TestScanner_ContextCancel(t *testing.T) {
 }
 
 func TestScanner_FakeEOF(t *testing.T) {
-	// Simulate "Fake EOF" (transient error treated as EOF by some readers, but we handle it via Mock)
-	// Actually, Fake EOF logic in scanner relies on count > threshold.
-	// Since standard io.Reader returns io.EOF, we can simulate persistent vs transient EOF?
-	// Scanner treats io.EOF as error? No, Read returns n=0, err=EOF.
-	// wait, Scanner.Start:
-	// n, err := s.r.Read(buffer)
-	// if err != nil { if s.handleReadError(...) return }
-	// handleReadError -> sleeps if not interrupted?
-	//
-	// If err is io.EOF, it is treated as "Error".
-	// Wait, is io.EOF treated as error in Go? Yes.
-	// So handleReadError gets io.EOF.
-	// handleReadError calls onError(err) and sleeps.
-	//
-	// Wait, standard Scanner stops on EOF.
-	// OUR robust scanner treats EOF as an error and retries unless threshold exceeded.
-	// This is specifically for "Fake EOF" on Windows.
-
-	// So if we send 4 EOFs, it should stop (default threshold 3).
-
-	r := &MockReader{
-		chunks: [][]byte{},
-		err:    io.EOF,
-	}
+	// Retry EOF to handle transient "fake EOF" on Windows; stop after threshold + 1.
+	readCount := 0
+	r := &countingEOFReader{count: &readCount}
 
 	scanner := NewScanner(r,
-		WithBackoff(1*time.Millisecond),
+		WithBackoff(0),
 		WithThreshold(3),
 	)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 250*time.Millisecond)
 	defer cancel()
 
-	start := time.Now()
 	scanner.Start(ctx)
-	duration := time.Since(start)
 
-	// Should have slept 3-4 times * 1ms.
-	// If it blocked forever, ctx timeout would trigger (1s).
-	// If it returned immediately, something is wrong.
-
-	if duration > 500*time.Millisecond {
-		t.Error("Scanner took too long, probably didn't hit threshold")
+	if ctx.Err() == context.DeadlineExceeded {
+		t.Fatal("Scanner did not stop after EOF threshold")
+	}
+	if readCount != 4 {
+		t.Errorf("Expected 4 EOF reads, got %d", readCount)
 	}
 }
 
@@ -282,13 +267,13 @@ func TestScanner_WithInterruptible_Interrupted(t *testing.T) {
 
 type baseObserver struct{}
 
-func (baseObserver) OnProcessStarted(int)             {}
-func (baseObserver) OnProcessFailed(error)            {}
-func (baseObserver) OnIOError(string, error)          {}
-func (baseObserver) OnScanError(error)                {}
-func (baseObserver) LogDebug(string, ...any)          {}
-func (baseObserver) LogWarn(string, ...any)           {}
-func (baseObserver) LogError(string, ...any)          {}
+func (baseObserver) OnProcessStarted(int)    {}
+func (baseObserver) OnProcessFailed(error)   {}
+func (baseObserver) OnIOError(string, error) {}
+func (baseObserver) OnScanError(error)       {}
+func (baseObserver) LogDebug(string, ...any) {}
+func (baseObserver) LogWarn(string, ...any)  {}
+func (baseObserver) LogError(string, ...any) {}
 
 type testObserver struct {
 	baseObserver
@@ -296,9 +281,9 @@ type testObserver struct {
 	ioErrors   []string
 }
 
-func (o *testObserver) OnScanError(err error)          { o.scanErrors = append(o.scanErrors, err) }
-func (o *testObserver) OnIOError(op string, err error) { o.ioErrors = append(o.ioErrors, op) }
-func (o *testObserver) LogWarn(msg string, args ...any) {}
+func (o *testObserver) OnScanError(err error)            { o.scanErrors = append(o.scanErrors, err) }
+func (o *testObserver) OnIOError(op string, err error)   { o.ioErrors = append(o.ioErrors, op) }
+func (o *testObserver) LogWarn(msg string, args ...any)  {}
 func (o *testObserver) LogError(msg string, args ...any) {}
 
 func TestScanner_ObserverOnScanError_NoHandler(t *testing.T) {

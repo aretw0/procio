@@ -46,8 +46,8 @@ func TestUpgrade_FileNonTerminal(t *testing.T) {
 
 // upgradeObserver captures Observer calls to verify correct hook routing.
 type upgradeObserver struct {
-	ioOps          []string
-	processFailed  []error
+	ioOps         []string
+	processFailed []error
 }
 
 func (o *upgradeObserver) OnProcessStarted(int)             {}
