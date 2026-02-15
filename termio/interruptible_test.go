@@ -83,7 +83,7 @@ func TestInterruptibleReader_Read_Slow(t *testing.T) {
 	}
 
 	// SUBSEQUENT read should return ErrInterrupted
-	n, err = r.Read(buf)
+	_, err = r.Read(buf)
 	if !errors.Is(err, ErrInterrupted) {
 		t.Errorf("Expected ErrInterrupted on second read, got %v", err)
 	}
