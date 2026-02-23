@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"time"
 
 	"github.com/aretw0/procio/proc"
@@ -21,7 +20,7 @@ func main() {
 	// Using a command that works on both Windows and Linux to show execution.
 	// On Windows, 'ping -n 1 127.0.0.1' takes a second.
 	// On Linux, 'ping -c 1 127.0.0.1' takes a second.
-	cmd := exec.CommandContext(ctx, "ping", "127.0.0.1")
+	cmd := proc.NewCmd(ctx, "ping", "127.0.0.1")
 	if err := proc.Start(cmd); err != nil {
 		fmt.Printf("Note: Could not start 'ping' (expected on some restricted environments): %v\n", err)
 	} else {

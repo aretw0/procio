@@ -54,9 +54,9 @@ func startBackgroundProcess(ctx context.Context) *exec.Cmd {
 	// On Linux: sleep 30
 	var cmd *exec.Cmd
 	if _, err := exec.LookPath("timeout"); err == nil {
-		cmd = exec.CommandContext(ctx, "timeout", "30")
+		cmd = proc.NewCmd(ctx, "timeout", "30")
 	} else {
-		cmd = exec.CommandContext(ctx, "sleep", "30")
+		cmd = proc.NewCmd(ctx, "sleep", "30")
 	}
 
 	if err := proc.Start(cmd); err != nil {
