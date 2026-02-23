@@ -4,21 +4,14 @@ version: 2
 project_name: procio
 
 builds:
-  - id: library
-    binary: procio
-    # We are a library, so we don't compile binaries.
-    # However, goreleaser requires a 'builds' section to be valid.
-    # We set a dummy target (linux/amd64) and 'skip: true' to satisfy this
-    # without actually building anything.
-    goos: [linux]
-    goarch: [amd64]
-    skip: true
+  - skip: true # We are a library, no binaries needed
 
-checksum:
-  name_template: "checksums.txt"
-
-snapshot:
-  version_template: "{{ .Tag }}-next"
+release:
+  github:
+    owner: aretw0
+    name: procio
+  draft: true
+  prerelease: auto
 
 changelog:
   sort: asc
@@ -26,3 +19,23 @@ changelog:
     exclude:
       - "^docs:"
       - "^test:"
+      - "^chore:"
+      - "^refactor:"
+      - "^style:"
+      - "^Merge pull request"
+      - "^Merge branch"
+  groups:
+    - title: Features
+      regexp: "^.*feat((\\([\\w\\-\\.]+\\))?):"
+      order: 0
+    - title: "Bug Fixes"
+      regexp: "^.*fix((\\([\\w\\-\\.]+\\))?):"
+      order: 1
+    - title: "Performance Improvements"
+      regexp: "^.*perf((\\([\\w\\-\\.]+\\))?):"
+      order: 2
+    - title: "Deprecated"
+      regexp: "^.*deprecate((\\([\\w\\-\\.]+\\))?):"
+      order: 3
+    - title: "Others"
+      order: 999

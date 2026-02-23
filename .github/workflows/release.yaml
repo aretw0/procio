@@ -1,4 +1,4 @@
-name: Release
+name: release
 
 on:
   push:
@@ -12,13 +12,18 @@ jobs:
   goreleaser:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
         with:
-          go-version: "stable"
-      - uses: goreleaser/goreleaser-action@v6
+          go-version: stable
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: latest
