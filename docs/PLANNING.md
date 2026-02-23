@@ -22,11 +22,11 @@
 
 **Focus**: Close the ergonomic gap identified during the `lifecycle v1.7.1` ecosystem audit: callers must currently combine `exec.CommandContext(ctx, ...)` with `proc.Start(cmd)` in two separate steps. This is an easily-forgettable pattern that can lead to missing process hygiene attributes.
 
-- [ ] **`proc.NewCmd(ctx, name, args...)`**: Convenience constructor that returns `*exec.Cmd` pre-configured with:
+- [x] **`proc.NewCmd(ctx, name, args...)`**: Convenience constructor that returns `*exec.Cmd` pre-configured with:
   - Context-linked cancellation (`exec.CommandContext` semantics).
   - Platform hygiene attributes (`PDeathSig`/`Job Objects`) applied automatically.
-- [ ] **Examples**: Update all `examples/` to prefer `proc.NewCmd` over the two-step pattern.
-- [ ] **Documentation**: Add a "Chained Cancels" section to `README.md` showing how `proc.NewCmd(ctx, ...)` integrates cleanly with derived contexts.
+- [x] **Examples**: Update all `examples/` to prefer `proc.NewCmd` over the two-step pattern.
+- [x] **Documentation**: Add a "Chained Cancels" section to `README.md` showing how `proc.NewCmd(ctx, ...)` integrates cleanly with derived contexts.
 
 ### v0.3.0 (Advanced Features)
 
