@@ -36,7 +36,7 @@
 
 ### v0.3.0 (Integration & Field Validation)
 
-- [ ] **Integration with `lifecycle` v2:** Provide an optional adapter so `lifecycle` can compose `procio` primitives.
+- [ ] **Integration with `lifecycle` v1.5+:** Provide an optional adapter so `lifecycle` can compose `procio` primitives.
 - [ ] **Production Feedback Loop:** Gather real-world usage data and address edge cases.
 - [ ] **API Stabilization:** Final breaking changes before v1.0 freeze.
 
