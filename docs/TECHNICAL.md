@@ -5,7 +5,7 @@
 ```text
 procio/
 ├── procio.go       # Facade, Configuration, Observer Interface
-├── proc/           # Process attributes (Pdeathsig, Job Objects)
+├── proc/           # Process lifecycle (Pdeathsig, Job Objects, NewCmd)
 ├── termio/         # Terminal I/O (Raw mode, Interruptible Readers)
 └── scan/           # High-level Scanner (Lines, Commands, Fake EOF)
 ```
@@ -14,9 +14,16 @@ procio/
 
 ### `proc`
 
-- **Linux**: Uses `syscall.SysProcAttr{Pdeathsig: SIGKILL}`.
-- **Windows**: Uses Job Objects (`JOBOBJECT_EXTENDED_LIMIT_INFORMATION` with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`). Global Job Object is initialized once per process.
-- **Fallback**: Wraps `cmd.Start()`.
+| Function | Purpose |
+|---|---|
+| `NewCmd(ctx, name, args...)` | Recommended constructor. Wraps `exec.CommandContext`; returns `*exec.Cmd` pre-linked to `ctx`. |
+| `Start(cmd)` | Applies platform hygiene and launches. Must be called after `NewCmd`. |
+
+**Platform implementations:**
+
+- **Linux**: Sets `syscall.SysProcAttr{Pdeathsig: SIGKILL}` before calling `cmd.Start()`.
+- **Windows**: Global Job Object initialized once per process via `sync.Once`. Each started process is assigned to the Job via `AssignProcessToJobObject`. Fail-closed: if assignment fails, the child is killed immediately.
+- **Fallback**: Wraps `cmd.Start()`. Returns error if `StrictMode = true`.
 
 ### `termio`
 
@@ -30,4 +37,15 @@ procio/
 
 ## Observability
 
-`procio` uses a "push" model via the `Observer` interface defined in the root package. It does not import any logging libraries.
+`procio` uses a "push" model via the `Observer` interface defined in the root package. It does not import any logging libraries. See [DECISIONS.md](./DECISIONS.md#1-zero-dependency-logging-observer-pattern).
+
+## Context Flow
+
+```text
+application context (appCtx)
+    └── subprocess context (subCtx = WithTimeout(appCtx, ...))
+            └── proc.NewCmd(subCtx, "worker")
+                    └── proc.Start(cmd)  ← applies OS hygiene
+```
+
+Cancelling `appCtx` propagates to `subCtx`, which terminates the process via `exec.CommandContext` internals. Platform hygiene (Job Objects / Pdeathsig) acts as a safety net for abnormal parent exits.

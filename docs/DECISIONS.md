@@ -15,3 +15,27 @@ On Windows, we use **Job Objects** (`JOBOBJECT_EXTENDED_LIMIT_INFORMATION` with 
 Windows Console Input (`CONIN$`) has a quirk where pressing `Ctrl+C` can sometimes be interpreted as an EOF (`0` bytes read) by `ReadFile` depending on the mode, instead of generating a signal immediately handled by the runtime.
 
 - **Solution**: The `scan.Scanner` implements a heuristic. If it sees a 0-byte read (EOF), it checks if it should retry a few times (`threshold`) before accepting it as a true stream end. This filters out transient EOFs caused by signal handling interrupts.
+
+## 4. `proc.NewCmd` as Ergonomic Entry Point (v0.2.0)
+
+**Context:** The v0.1.x API required two separate steps to start a process with both context-linked cancellation and platform hygiene:
+
+```go
+// error-prone two-step pattern
+cmd := exec.CommandContext(ctx, name, args...)
+err := proc.Start(cmd)
+```
+
+The risk: if a caller mistakenly uses `exec.Command` (no context) instead of `exec.CommandContext`, the platform hygiene is applied but cancellation propagation is silently lost.
+
+**Decision:** Introduce `proc.NewCmd(ctx, name, args...)` as the recommended constructor. It is a thin wrapper over `exec.CommandContext` that signals intent ("I have a context, use it") without hiding the two-phase model (construct then start).
+
+**Rejected alternatives:**
+
+| Alternative | Why rejected |
+|---|---|
+| `proc.Start(ctx, name, args...)` — combine start + launch | Prevents configuring `Stdout`, `Env`, `Dir` before launching. Breaks the builder pattern. |
+| `proc.StartCmd(cmd) error` accepting context-less cmd | Doesn't solve the ergonomic problem; caller still needs to remember `CommandContext`. |
+| Return a custom struct wrapping `*exec.Cmd` | Adds indirection with no benefit; `*exec.Cmd` is already the standard Go type. |
+
+**Constraint preserved:** `proc.Start(cmd)` remains unchanged. `NewCmd` is purely additive.

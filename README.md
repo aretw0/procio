@@ -21,12 +21,12 @@ go get github.com/aretw0/procio
 
 ## Usage
 
-### starting a process safely
+### Starting a Process Safely
 
 ```go
 import "github.com/aretw0/procio/proc"
 
-cmd := exec.Command("long-running-worker")
+cmd := proc.NewCmd(ctx, "long-running-worker")
 // Uses Pdeathsig (Linux) or Job Objects (Windows) to enforce cleanup
 err := proc.Start(cmd)
 ```
@@ -63,6 +63,29 @@ scanner := scan.NewScanner(os.Stdin,
 scanner.Start(ctx) // Returns when context is cancelled or EOF
 ```
 
+### Chained Cancels
+
+`proc.NewCmd` integrates naturally with derived contexts, so cancellation hierarchies work as expected:
+
+```go
+// appCtx controls the whole application lifetime.
+appCtx, appCancel := context.WithCancel(context.Background())
+defer appCancel()
+
+// subCtx adds a deadline for a specific subprocess.
+subCtx, subCancel := context.WithTimeout(appCtx, 10*time.Second)
+defer subCancel()
+
+cmd := proc.NewCmd(subCtx, "worker")
+if err := proc.Start(cmd); err != nil {
+    log.Fatal(err)
+}
+cmd.Wait()
+// worker is terminated when subCtx expires OR when appCtx is cancelled —
+// whichever comes first. Platform hygiene (Job Objects / Pdeathsig) is
+// still applied regardless of which signal arrives first.
+```
+
 ## Observability
 
 `procio` is opinionated about specific mechanisms but unopinionated about logging/metrics.
@@ -73,3 +96,9 @@ import "github.com/aretw0/procio"
 
 procio.SetObserver(myObserver)
 ```
+
+See [docs/RECIPES.md](./docs/RECIPES.md) for a complete `log/slog` adapter example.
+
+## License
+
+This project is licensed under the terms of the [AGPL-3.0](./LICENSE).
