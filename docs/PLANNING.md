@@ -34,10 +34,16 @@
 - [ ] **Enhanced Windows Console API:** Improved console mode handling and event processing.
 - [ ] **Streaming Telemetry:** Real-time process metrics (CPU, memory) via callbacks or channels, without external dependencies.
 
-### v0.4.0 (Integration & Field Validation)
+### v0.4.0 (Integration)
 
 - [ ] **Integration with `lifecycle` v1.5+:** Provide an optional adapter so `lifecycle` can compose `procio` primitives.
+
+### v0.5.0 (Production Feedback Loop)
+
 - [ ] **Production Feedback Loop:** Gather real-world usage data and address edge cases.
+
+### v0.6.0 (API Stabilization)
+
 - [ ] **API Stabilization:** Final breaking changes before v1.0 freeze.
 
 ### v1.0.0 (Stable Release)
