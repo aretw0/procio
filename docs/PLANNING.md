@@ -18,7 +18,7 @@
 - [x] **Practical Examples:** Added `composition`, `interruptible`, and `observer` examples.
 - [x] **Test Coverage:** Added end-to-end integration tests.
 
-### v0.1.2 (Ergonomic Context API)
+### v0.2.0 (Ergonomic Context API)
 
 **Focus**: Close the ergonomic gap identified during the `lifecycle v1.7.1` ecosystem audit: callers must currently combine `exec.CommandContext(ctx, ...)` with `proc.Start(cmd)` in two separate steps. This is an easily-forgettable pattern that can lead to missing process hygiene attributes.
 
@@ -28,13 +28,13 @@
 - [ ] **Examples**: Update all `examples/` to prefer `proc.NewCmd` over the two-step pattern.
 - [ ] **Documentation**: Add a "Chained Cancels" section to `README.md` showing how `proc.NewCmd(ctx, ...)` integrates cleanly with derived contexts.
 
-### v0.2.0 (Advanced Features)
+### v0.3.0 (Advanced Features)
 
 - [ ] **PTY Support:** Pseudo-terminal primitives for running interactive applications (vim, htop) within processes.
 - [ ] **Enhanced Windows Console API:** Improved console mode handling and event processing.
 - [ ] **Streaming Telemetry:** Real-time process metrics (CPU, memory) via callbacks or channels, without external dependencies.
 
-### v0.3.0 (Integration & Field Validation)
+### v0.4.0 (Integration & Field Validation)
 
 - [ ] **Integration with `lifecycle` v1.5+:** Provide an optional adapter so `lifecycle` can compose `procio` primitives.
 - [ ] **Production Feedback Loop:** Gather real-world usage data and address edge cases.
