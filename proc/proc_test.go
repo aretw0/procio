@@ -1,6 +1,7 @@
 package proc_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -77,5 +78,43 @@ func TestStart_Failure(t *testing.T) {
 	err := proc.Start(cmd)
 	if err == nil {
 		t.Error("Expected error for non-existent binary, got nil")
+	}
+}
+
+func TestNewCmd(t *testing.T) {
+	// Verifies that NewCmd returns a startable *exec.Cmd via proc.Start.
+	ctx := context.Background()
+	cmd := proc.NewCmd(ctx, os.Args[0], "child")
+	cmd.Env = append(os.Environ(), HelperProcess+"=1")
+
+	if err := proc.Start(cmd); err != nil {
+		t.Fatalf("proc.Start(proc.NewCmd(...)) failed: %v", err)
+	}
+	if cmd.Process == nil {
+		t.Fatal("cmd.Process is nil after Start")
+	}
+	cmd.Process.Kill()
+}
+
+func TestNewCmd_ContextCancellation(t *testing.T) {
+	// Verifies that the context passed to NewCmd propagates cancellation
+	// to the child process via exec.CommandContext semantics.
+	ctx, cancel := context.WithCancel(context.Background())
+
+	cmd := proc.NewCmd(ctx, os.Args[0], "child")
+	cmd.Env = append(os.Environ(), HelperProcess+"=1")
+
+	if err := proc.Start(cmd); err != nil {
+		t.Fatalf("proc.Start failed: %v", err)
+	}
+
+	// Give the process a moment to fully start before cancelling.
+	time.Sleep(50 * time.Millisecond)
+	cancel()
+
+	err := cmd.Wait()
+	// Context cancellation kills the process; Wait must return a non-nil error.
+	if err == nil {
+		t.Error("expected non-nil error after context cancellation, got nil")
 	}
 }

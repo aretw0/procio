@@ -27,3 +27,19 @@ func ExampleStart() {
 	// Wait for process to finish or context to be cancelled.
 	_ = cmd.Wait()
 }
+
+func ExampleNewCmd() {
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	// NewCmd combines exec.CommandContext with automatic platform hygiene.
+	// It is the recommended entry point: no need to import os/exec directly.
+	cmd := proc.NewCmd(ctx, "sleep", "1")
+	if err := proc.Start(cmd); err != nil {
+		fmt.Println("Error starting process:", err)
+		return
+	}
+
+	// Wait for process to finish or context to be cancelled.
+	_ = cmd.Wait()
+}
