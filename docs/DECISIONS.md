@@ -46,7 +46,7 @@ We chose the terms `controller` and `worker` instead of the traditional `master`
 
 ## 6. PTY Implementation (Windows ConPTY vs POSIX `openpty`)
 
-On Windows, we use the ConPTY API (`CreatePseudoConsole`), which is the modern standard (Windows 10+) for pseudo-terminals. This replaces brittle legacy hacks using named pipes and hidden console windows. On POSIX, rather than linking `cgo` for libc's `openpty`, we directly open `/dev/ptmx` and use ioctls (`TIOCGPTN` for name discovery and `TIOCSPTLCK` for unlocking) to allocate the worker. We treat `grantpt` as a no-op since modern kernels (devpts) handle permissions automatically, allowing us to remain `CGO_ENABLED=0` capable and pure Go.
+On Windows, we use the ConPTY API (`CreatePseudoConsole`), which is the modern standard (Windows 10+) for pseudo-terminals. This replaces brittle legacy hacks using named pipes and hidden console windows. On POSIX, rather than linking `cgo` for libc's `openpty`, we directly open `/dev/ptmx` and use ioctls (`TIOCGPTN`/`TIOCPTYGNAME` for name discovery, `TIOCSPTLCK`/`TIOCPTYUNLK` for unlocking, and `TIOCPTYGRANT` on Darwin) to allocate the worker. This keeps the library `CGO_ENABLED=0` capable and pure Go. Because the ioctl surface differs between platforms, the implementation is split across `pty_linux.go`, `pty_darwin.go`, and `pty_bsd.go`.
 
 ## 7. Zero-Dependency Telemetry
 
@@ -71,3 +71,7 @@ unix.Syscall(unix.SYS_IOCTL, uintptr(fd), unix.TIOCSPTLCK, uintptr(unsafe.Pointe
 ```
 
 `unix.IoctlSetInt` is incorrect for any ioctl that expects a C `int` pointer on 64-bit platforms. Use `Syscall` with the correctly-sized type.
+
+## 10. Darwin's `grantpt` Is Not a No-op: `TIOCPTYGRANT` Required
+
+On Linux, `grantpt()` is effectively a no-op because the kernel `devpts` filesystem automatically sets correct ownership and permissions on the worker device when `/dev/ptmx` is opened. On Darwin (macOS), this step is **mandatory**: the worker side (`/dev/ttysN`) starts with restrictive root-only permissions and requires the `TIOCPTYGRANT` ioctl on the controller fd before it can be opened by the calling process. Omitting it causes `open worker: permission denied`. A subsequent `TIOCPTYUNLK` ioctl is also needed to unlock the worker. This distinction drove the split of the POSIX PTY implementation into platform-specific files (`pty_linux.go`, `pty_darwin.go`, `pty_bsd.go`).
