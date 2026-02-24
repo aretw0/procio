@@ -132,3 +132,67 @@ func main() {
     cmd.Wait()
 }
 ```
+
+## 6. Running an Interactive Application in a PTY
+
+When you need to wrap interactive tools like `vim`, `htop`, or `ssh` that require a real terminal.
+
+```go
+import (
+    "context"
+    "io"
+    "os"
+    "github.com/aretw0/procio/proc"
+    "github.com/aretw0/procio/pty"
+    "github.com/aretw0/procio/termio"
+)
+
+func main() {
+    ctx := context.Background()
+    cmd := proc.NewCmd(ctx, "vim")
+    
+    // Allocate PTY and attach it to the command
+    p, err := pty.StartPTY(cmd)
+    if err != nil {
+        panic(err)
+    }
+    defer p.Controller.Close()
+
+    // Put host terminal into raw mode to pass keys (like Ctrl+C) through
+    console, _ := termio.NewConsole(os.Stdin)
+    console.EnableRawMode()
+    defer console.Restore()
+
+    // Forward IO
+    go io.Copy(p.Controller, os.Stdin)
+    go io.Copy(os.Stdout, p.Controller)
+
+    cmd.Wait()
+}
+```
+
+## 7. Streaming Process Telemetry
+
+Monitor basic CPU and memory usage of a background process without external dependencies.
+
+```go
+import (
+    "context"
+    "fmt"
+    "time"
+    "github.com/aretw0/procio/proc"
+)
+
+func main() {
+    ctx := context.Background()
+    cmd := proc.NewCmd(ctx, "long-running-task")
+    proc.Start(cmd)
+
+    // Monitor emits metrics every second
+    ch, _ := proc.Monitor(ctx, cmd, time.Second)
+
+    for m := range ch {
+        fmt.Printf("CPU: %.1f%% | Mem: %d KB\n", m.CPUPercent, m.MemRSS/1024)
+    }
+}
+```

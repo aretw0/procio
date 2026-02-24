@@ -18,6 +18,14 @@ procio/
 |---|---|
 | `NewCmd(ctx, name, args...)` | Recommended constructor. Wraps `exec.CommandContext`; returns `*exec.Cmd` pre-linked to `ctx`. |
 | `Start(cmd)` | Applies platform hygiene and launches. Must be called after `NewCmd`. |
+| `Monitor(ctx, cmd, interval)`| Streams real-time `Metrics` (CPU%, MemRSS) from the running process to a channel. |
+
+### `pty`
+
+| Struct / Function | Purpose |
+|---|---|
+| `PTY` | Holds the `Controller` and `Worker` file descriptors for a pseudo-terminal pair. |
+| `StartPTY(cmd)` | Starts a command attached to a new PTY, returning the `PTY` instance for I/O interaction. |
 
 **Platform implementations:**
 
@@ -27,6 +35,7 @@ procio/
 
 ### `termio`
 
+- **Console**: Abstract wrapper over OS terminal modes. Allows calling `EnableRawMode()`, `Restore()`, and `Size()`.
 - **IsInterrupted**: Centralized logic to detect cancellation across platforms (Ctrl+C, Context Done, EOF).
 - **InterruptibleReader**: Wraps `io.Reader` to select on `ctx.Done()` before and after blocking calls.
 
@@ -49,3 +58,17 @@ application context (appCtx)
 ```
 
 Cancelling `appCtx` propagates to `subCtx`, which terminates the process via `exec.CommandContext` internals. Platform hygiene (Job Objects / Pdeathsig) acts as a safety net for abnormal parent exits.
+
+## PTY Pipeline Flow
+
+When utilizing `pty.StartPTY`, the data flows through the pseudo-terminal layer before hitting the child process, forcing it to act interactively.
+
+```mermaid
+graph LR
+    A[Host App] <-->|Read / Write| B(PTY Controller)
+    B <-->|Kernel Forwarding| C(PTY Worker)
+    C <-->|stdin/stdout/stderr| D[Child Process]
+    
+    style B fill:#e1f5fe,stroke:#01579b
+    style C fill:#e1f5fe,stroke:#01579b
+```

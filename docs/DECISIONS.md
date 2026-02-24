@@ -39,3 +39,35 @@ The risk: if a caller mistakenly uses `exec.Command` (no context) instead of `ex
 | Return a custom struct wrapping `*exec.Cmd` | Adds indirection with no benefit; `*exec.Cmd` is already the standard Go type. |
 
 **Constraint preserved:** `proc.Start(cmd)` remains unchanged. `NewCmd` is purely additive.
+
+## 5. PTY Terminology (`controller`/`worker`)
+
+We chose the terms `controller` and `worker` instead of the traditional `master`/`slave` or `pty`/`tty` for pseudo-terminals. This aligns with modern, inclusive language guidelines while accurately describing the role of each end: the `controller` reads/writes the I/O stream, and the `worker` acts as the terminal device for the child process.
+
+## 6. PTY Implementation (Windows ConPTY vs POSIX `openpty`)
+
+On Windows, we use the ConPTY API (`CreatePseudoConsole`), which is the modern standard (Windows 10+) for pseudo-terminals. This replaces brittle legacy hacks using named pipes and hidden console windows. On POSIX, rather than linking `cgo` for libc's `openpty`, we directly open `/dev/ptmx` and use ioctls (`TIOCGPTN` for name discovery and `TIOCSPTLCK` for unlocking) to allocate the worker. We treat `grantpt` as a no-op since modern kernels (devpts) handle permissions automatically, allowing us to remain `CGO_ENABLED=0` capable and pure Go.
+
+## 7. Zero-Dependency Telemetry
+
+For process metrics (CPU/Memory), we implemented direct OS scraping instead of leveraging comprehensive but heavy third-party libraries (like `shirou/gopsutil`).
+
+- **Linux**: Direct parsing of `/proc/[pid]/stat` and `/proc/[pid]/statm`.
+- **Windows**: Syscalls to `GetProcessTimes` and `GetProcessMemoryInfo` via `psapi.dll`.
+
+This maintains `procio`'s core philosophy of having zero external dependencies (aside from `golang.org/x/sys`), keeping it lightweight and suitable for seamless embedding into CLI tools.
+
+## 8. ConPTY Requires `STARTF_USESTDHANDLES` to Prevent stdout Bypass
+
+When creating a child process with `CreateProcess` and a `ProcThreadAttributeList` containing a `PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE`, the `StartupInfoEx.Flags` field **must** include `STARTF_USESTDHANDLES` with zeroed std handle fields. Without it, Windows falls back to inheriting the parent's stdio handles — including any anonymous pipes set up by `go test` to capture test output. The child writes directly to those pipes, bypassing the ConPTY entirely, so `p.Controller` never receives any bytes. Setting `STARTF_USESTDHANDLES` with zero handles forces the child to use only the attached PseudoConsole, reproducing the same behavior in `go test`, CI runners, and interactive terminals.
+
+## 9. `TIOCSPTLCK` Requires a `*int32`, Not a Go `int`
+
+`unix.IoctlSetInt` passes `unsafe.Pointer(&value)` where `value` is a Go `int` (8 bytes on amd64). `TIOCSPTLCK` is defined as `_IOW('T', 0x31, int)` where `int` is the C int — 4 bytes. The kernel validates the argument size via `_IOC_SIZE` and returns `EFAULT` on mismatch. The fix is to call `unix.Syscall` directly with a `*int32`:
+
+```go
+var zero int32
+unix.Syscall(unix.SYS_IOCTL, uintptr(fd), unix.TIOCSPTLCK, uintptr(unsafe.Pointer(&zero)))
+```
+
+`unix.IoctlSetInt` is incorrect for any ioctl that expects a C `int` pointer on 64-bit platforms. Use `Syscall` with the correctly-sized type.

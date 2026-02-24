@@ -30,9 +30,9 @@
 
 ### v0.3.0 (Advanced Features)
 
-- [ ] **PTY Support:** Pseudo-terminal primitives for running interactive applications (vim, htop) within processes.
-- [ ] **Enhanced Windows Console API:** Improved console mode handling and event processing.
-- [ ] **Streaming Telemetry:** Real-time process metrics (CPU, memory) via callbacks or channels, without external dependencies.
+- [x] **PTY Support:** Pseudo-terminal primitives for running interactive applications (vim, htop) within processes.
+- [x] **Enhanced Windows Console API:** Improved console mode handling and event processing.
+- [x] **Streaming Telemetry:** Real-time process metrics (CPU, memory) via callbacks or channels, without external dependencies.
 
 ### v0.4.0 (Integration)
 

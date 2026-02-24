@@ -86,6 +86,33 @@ cmd.Wait()
 // still applied regardless of which signal arrives first.
 ```
 
+### Advanced Features
+
+`procio` provides primitives for advanced process control:
+
+#### Pseudo-Terminals (PTY)
+
+Wrap interactive applications:
+
+```go
+import "github.com/aretw0/procio/pty"
+
+cmd := proc.NewCmd(ctx, "vim")
+p, err := pty.StartPTY(cmd)
+// Forward p.Controller to/from host Stdin/Stdout
+```
+
+#### Streaming Telemetry
+
+Monitor processes in real-time (Linux & Windows):
+
+```go
+ch, err := proc.Monitor(ctx, cmd, time.Second)
+for m := range ch {
+    fmt.Printf("CPU: %.1f%% Mem: %d KB\n", m.CPUPercent, m.MemRSS/1024)
+}
+```
+
 ## Observability
 
 `procio` is opinionated about specific mechanisms but unopinionated about logging/metrics.
