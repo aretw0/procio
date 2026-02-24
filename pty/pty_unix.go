@@ -56,8 +56,8 @@ func openpty() (*os.File, *os.File, error) {
 		return nil, nil, fmt.Errorf("pty: open /dev/ptmx: %w", err)
 	}
 
-	// grantpt: on Linux this is a no-op; on Darwin/glibc it adjusts permissions.
-	if err := grantpt(controllerFD); err != nil {
+	// ioctlGrantpt: on Linux this is a no-op; on Darwin it adjusts permissions.
+	if err := ioctlGrantpt(controllerFD); err != nil {
 		_ = unix.Close(controllerFD)
 		return nil, nil, fmt.Errorf("pty: grantpt: %w", err)
 	}
@@ -85,10 +85,3 @@ func openpty() (*os.File, *os.File, error) {
 		os.NewFile(uintptr(workerFD), workerPath),
 		nil
 }
-
-// grantpt is a no-op on most modern POSIX systems (Linux 2.0+, modern BSDs).
-// In these systems, permissions and ownership of the worker side (/dev/pts/N)
-// are managed automatically by the kernel's devpts filesystem upon opening /dev/ptmx.
-// A real grantpt() implementation in C often involves calling a setuid helper
-// (like pt_chown) which we avoid here to keep the library pure Go and CGO-free.
-func grantpt(_ int) error { return nil }

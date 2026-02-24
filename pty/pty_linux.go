@@ -24,6 +24,11 @@ func ioctlUnlockpt(fd int) error {
 	return nil
 }
 
+func ioctlGrantpt(_ int) error {
+	// grantpt is a no-op on Linux since the kernel devpts automatically handles permissions.
+	return nil
+}
+
 func ioctlPtsname(fd int) (string, error) {
 	var n uint32
 	if _, _, errno := unix.Syscall(unix.SYS_IOCTL, uintptr(fd), unix.TIOCGPTN, uintptr(unsafe.Pointer(&n))); errno != 0 {

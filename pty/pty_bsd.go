@@ -1,4 +1,4 @@
-//go:build darwin
+//go:build freebsd || openbsd || netbsd || dragonfly
 
 package pty
 
@@ -8,28 +8,18 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// Syscalls extraídas de syscall/zerrors_darwin_*.go
-const (
-	TIOCPTYGRANT = 0x20007454
-	TIOCPTYUNLK  = 0x20007452
-)
-
 func ioctlGrantpt(fd int) error {
-	if _, _, errno := unix.Syscall(unix.SYS_IOCTL, uintptr(fd), TIOCPTYGRANT, 0); errno != 0 {
-		return errno
-	}
+	// On BSDs, permissions are managed automatically when opening /dev/ptmx.
 	return nil
 }
 
 func ioctlUnlockpt(fd int) error {
-	if _, _, errno := unix.Syscall(unix.SYS_IOCTL, uintptr(fd), TIOCPTYUNLK, 0); errno != 0 {
-		return errno
-	}
+	// BSDs do not require a specific unlock ioctl (unlike Linux TIOCSPTLCK).
 	return nil
 }
 
 func ioctlPtsname(fd int) (string, error) {
-	// On Darwin/BSD, we use TIOCPTYGNAME to get the worker device path.
+	// On BSDs, we use TIOCPTYGNAME to get the worker device path.
 	const TIOCPTYGNAME = 0x40807453
 	var buf [128]byte
 	if _, _, errno := unix.Syscall(unix.SYS_IOCTL, uintptr(fd), TIOCPTYGNAME, uintptr(unsafe.Pointer(&buf[0]))); errno != 0 {
