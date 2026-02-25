@@ -72,3 +72,44 @@ graph LR
     style B fill:#e1f5fe,stroke:#01579b
     style C fill:#e1f5fe,stroke:#01579b
 ```
+
+## Integration Points (v0.4.0)
+
+`procio` exposes three stable boundaries for integration with higher-level frameworks (see also [ADR-11](./DECISIONS.md#11-integration-hierarchy-in-the-ecosystem-v040)).
+
+### 1. Observer Bridge
+
+The `Observer` interface (root package) is the **telemetry contract**. Consumers implement it in their own package; `procio` never imports any logger. Since v0.4.0, `lifecycle.Observer` is a drop-in implementation — it satisfies `procio.Observer` directly with no glue code:
+
+```go
+var _ procio.Observer = (*MyObserver)(nil) // compile-time check
+procio.SetObserver(myObserver)
+```
+
+Full `ObserverBridge` example: see `examples/lifecycle_bridge/` and `lifecycle/docs/RECIPES.md`.
+
+### 2. Context Contract
+
+`proc.NewCmd(ctx, name, args...)` is the **process creation contract**. Context-linked cancellation and platform hygiene (Job Objects / Pdeathsig) are guaranteed when the caller derives the subprocess context from the application context:
+
+```text
+appCtx (lifecycle.SignalContext or signal.Context)
+    └── subCtx = context.WithTimeout(appCtx, 30s)
+            └── proc.NewCmd(subCtx, "worker")
+                    └── proc.Start(cmd)  ← applies OS hygiene
+```
+
+### 3. Worker Contract
+
+The canonical pattern for embedding `proc.Start` inside a `lifecycle.Worker`:
+
+```go
+func (w *MyWorker) Start(ctx context.Context) error {
+    // Use proc.NewCmd, NOT exec.Command — binds context cancellation.
+    w.cmd = proc.NewCmd(ctx, w.binary, w.args...)
+    w.cmd.Stdout = w.stdout
+    return proc.Start(w.cmd)
+}
+```
+
+Reference implementation: `lifecycle.ProcessWorker` in `pkg/core/worker/process.go`.

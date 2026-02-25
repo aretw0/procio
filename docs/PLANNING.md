@@ -36,7 +36,13 @@
 
 ### v0.4.0 (Integration)
 
-- [ ] **Integration with `lifecycle` v1.5+:** Provide an optional adapter so `lifecycle` can compose `procio` primitives.
+**Focus**: Make `procio` ready for idiomatic consumption by the ecosystem. This release closes the DX gap between `procio` and its primary consumer (`lifecycle`), establishing clear integration contracts so downstream projects (`loam`, `trellis`) know exactly how to compose these primitives.
+
+- [ ] **`Observer.LogInfo`**: Add `LogInfo(msg string, args ...any)` to the `Observer` interface. Aligns `procio.Observer` with `lifecycle.Observer` (which already exposes `LogInfo`). A `lifecycle.Observer` implementation now satisfies `procio.Observer` directly without requiring an adapter wrapper. **Breaking change from v0.1.x; `noopObserver` updated accordingly.**
+- [ ] **Integration Recipe**: Add `Recipe 8: Integration with lifecycle` to `RECIPES.md`, demonstrating `proc.NewCmd` inside a `lifecycle.Worker`, `ObserverBridge` wiring, and context chaining as cleanup guarantee.
+- [ ] **Ecosystem ADR**: Add ADR-11 to `DECISIONS.md` documenting the integration hierarchy: `lifecycle` is the sole intended direct consumer of `procio` in the ecosystem; `loam` and `trellis` should compose `procio` primitives via `lifecycle.ProcessWorker`.
+- [ ] **Integration Points** section in `TECHNICAL.md`: Formally describe the three integration boundaries (Observer Bridge, Context Contract, Worker Contract).
+- [ ] **`examples/lifecycle_bridge/`**: Compilable example acting as a compile-time contract test for the `ObserverBridge` pattern.
 
 ### v0.5.0 (Production Feedback Loop)
 

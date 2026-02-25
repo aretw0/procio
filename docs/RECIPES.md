@@ -196,3 +196,54 @@ func main() {
     }
 }
 ```
+
+## 8. Integration with `lifecycle`
+
+**Problem**: You want to run OS processes managed by `lifecycle.ProcessWorker` and connect `procio`'s telemetry to your existing `lifecycle.Observer`.
+
+**Solution (v0.4.0+)**: Since `lifecycle.Observer` is a superset of `procio.Observer` (adds `OnGoroutinePanicked`), any `lifecycle.Observer` implementation satisfies `procio.Observer` directly — no wrapper needed.
+
+```go
+import (
+    "context"
+    "log/slog"
+    "github.com/aretw0/procio"
+    "github.com/aretw0/procio/proc"
+)
+
+// MyObserver satisfies both procio.Observer and lifecycle.Observer.
+// The only extra method lifecycle requires is OnGoroutinePanicked.
+type MyObserver struct{}
+
+func (o *MyObserver) OnProcessStarted(pid int)           { slog.Info("started", "pid", pid) }
+func (o *MyObserver) OnProcessFailed(err error)          { slog.Error("failed", "err", err) }
+func (o *MyObserver) OnIOError(op string, err error)     { slog.Error("io", "op", op, "err", err) }
+func (o *MyObserver) OnScanError(err error)              { slog.Error("scan", "err", err) }
+func (o *MyObserver) LogDebug(msg string, args ...any)   { slog.Debug(msg, args...) }
+func (o *MyObserver) LogInfo(msg string, args ...any)    { slog.Info(msg, args...) }
+func (o *MyObserver) LogWarn(msg string, args ...any)    { slog.Warn(msg, args...) }
+func (o *MyObserver) LogError(msg string, args ...any)   { slog.Error(msg, args...) }
+func (o *MyObserver) OnGoroutinePanicked(v any, stack []byte) { /* lifecycle-specific */ }
+
+// Compile-time check — this line fails to build if procio.Observer changes.
+var _ procio.Observer = (*MyObserver)(nil)
+
+func main() {
+    procio.SetObserver(&MyObserver{})
+
+    ctx, cancel := context.WithCancel(context.Background())
+    defer cancel()
+
+    // Use proc.NewCmd (not exec.Command) to bind context cancellation.
+    cmd := proc.NewCmd(ctx, "long-running-service", "--flag")
+    if err := proc.Start(cmd); err != nil {
+        slog.Error("could not start", "err", err)
+        return
+    }
+    cmd.Wait()
+}
+```
+
+> **Pattern**: `lifecycle.ProcessWorker` is the reference implementation of the Worker Contract.
+> Use it directly or follow its pattern for custom workers.
+> See [Integration Points](TECHNICAL.md#integration-points-v040) for a deeper explanation.

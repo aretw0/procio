@@ -72,6 +72,32 @@ unix.Syscall(unix.SYS_IOCTL, uintptr(fd), unix.TIOCSPTLCK, uintptr(unsafe.Pointe
 
 `unix.IoctlSetInt` is incorrect for any ioctl that expects a C `int` pointer on 64-bit platforms. Use `Syscall` with the correctly-sized type.
 
-## 10. Darwin's `grantpt` Is Not a No-op: `TIOCPTYGRANT` Required
+## 11. Integration Hierarchy in the Ecosystem (v0.4.0)
+
+**Context:** The `procio` library is used by multiple projects in the same ecosystem (`lifecycle`, `loam`, `trellis`). Without a documented integration contract, each project risks using `procio` in inconsistent ways (e.g., calling `proc.Start` directly instead of going through `lifecycle.ProcessWorker`).
+
+**Decision:** Establish `lifecycle` as the **sole intended direct consumer** of `procio` in the ecosystem. Downstream projects (`loam`, `trellis`) must compose `procio` primitives **exclusively via `lifecycle.ProcessWorker`**, never by importing `procio` packages directly in application-level code.
+
+The integration hierarchy is:
+
+```text
+procio          (OS Mechanics layer)
+    ↓ consumed directly by
+lifecycle       (Policy Engine layer)
+    ↓ consumed directly by
+loam / trellis  (Application layer — use lifecycle.ProcessWorker)
+```
+
+**Rationale:**
+
+1. **Single responsibility**: `procio` handles "how to start a process safely"; `lifecycle` handles "when and why to start it, and what to do when it fails". Mixing these concerns in `loam`/`trellis` creates tight coupling.
+2. **No adapter package needed**: The bridge between `procio` and `lifecycle` is achieved via the `Observer` interface (caller owns the adapter, `procio` does not). This keeps `procio` dependency-free and avoids circular imports.
+3. **`Observer.LogInfo` alignment**: Prior to v0.4.0, `procio.Observer` was missing `LogInfo`, causing `lifecycle.Observer` implementations to require an explicit wrapper. Adding `LogInfo` to `procio.Observer` makes `lifecycle.Observer` a **drop-in** implementation with no glue code.
+
+**Consequences:**
+
+- `loam` and `trellis` should have `procio` only as an **indirect** dependency (via `lifecycle`). Any direct `procio` import in these projects is a design smell.
+- The `ObserverBridge` pattern (documented in `lifecycle/docs/RECIPES.md` and `procio/docs/RECIPES.md`) is the canonical way to unify telemetry from both layers.
+- Future `procio` releases must remain backwards-compatible with `lifecycle`'s usage surface (`proc.Start`, `proc.NewCmd`, `termio.InterruptibleReader`, `scan.Scanner`).
 
 On Linux, `grantpt()` is effectively a no-op because the kernel `devpts` filesystem automatically sets correct ownership and permissions on the worker device when `/dev/ptmx` is opened. On Darwin (macOS), this step is **mandatory**: the worker side (`/dev/ttysN`) starts with restrictive root-only permissions and requires the `TIOCPTYGRANT` ioctl on the controller fd before it can be opened by the calling process. Omitting it causes `open worker: permission denied`. A subsequent `TIOCPTYUNLK` ioctl is also needed to unlock the worker. This distinction drove the split of the POSIX PTY implementation into platform-specific files (`pty_linux.go`, `pty_darwin.go`, `pty_bsd.go`).
