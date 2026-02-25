@@ -44,7 +44,7 @@ func ExampleNewScanner() {
 	go scanner.Start(ctx)
 }
 
-func ExampleNewScanner_interruptible() {
+func ExampleWithInterruptible() {
 	// WithInterruptible combines termio.Upgrade + InterruptibleReader
 	// so context cancellation works even on blocking terminal reads.
 	ctx, cancel := context.WithCancel(context.Background())

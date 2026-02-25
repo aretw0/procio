@@ -16,7 +16,7 @@ func ExampleStart() {
 	// Start a process. proc.Start wraps the standard exec.Cmd to provide
 	// platform-specific guarantees (Job Objects on Windows, Pdeathsig on Linux)
 	// that ensure child processes are terminated when the parent process exits.
-	cmd := exec.CommandContext(ctx, "sleep", "1")
+	cmd := exec.CommandContext(ctx, "echo", "hello proc")
 
 	// Start the process with hygiene guarantees.
 	if err := proc.Start(cmd); err != nil {
@@ -24,8 +24,10 @@ func ExampleStart() {
 		return
 	}
 
-	// Wait for process to finish or context to be cancelled.
+	// For the sake of the example, wait for completion
 	_ = cmd.Wait()
+
+	fmt.Println("Process completed")
 }
 
 func ExampleNewCmd() {
@@ -34,12 +36,13 @@ func ExampleNewCmd() {
 
 	// NewCmd combines exec.CommandContext with automatic platform hygiene.
 	// It is the recommended entry point: no need to import os/exec directly.
-	cmd := proc.NewCmd(ctx, "sleep", "1")
+	cmd := proc.NewCmd(ctx, "echo", "hello new cmd")
+
 	if err := proc.Start(cmd); err != nil {
 		fmt.Println("Error starting process:", err)
 		return
 	}
 
-	// Wait for process to finish or context to be cancelled.
 	_ = cmd.Wait()
+	fmt.Println("Process started with NewCmd completed")
 }
