@@ -39,6 +39,7 @@ func (o *integrationObserver) OnScanError(err error) {
 }
 
 func (o *integrationObserver) LogDebug(msg string, args ...any) {}
+func (o *integrationObserver) LogInfo(msg string, args ...any)  {}
 func (o *integrationObserver) LogWarn(msg string, args ...any)  {}
 func (o *integrationObserver) LogError(msg string, args ...any) {}
 

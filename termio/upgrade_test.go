@@ -55,6 +55,7 @@ func (o *upgradeObserver) OnProcessFailed(err error)        { o.processFailed = 
 func (o *upgradeObserver) OnIOError(op string, err error)   { o.ioOps = append(o.ioOps, op) }
 func (o *upgradeObserver) OnScanError(error)                {}
 func (o *upgradeObserver) LogDebug(msg string, args ...any) {}
+func (o *upgradeObserver) LogInfo(msg string, args ...any)  {}
 func (o *upgradeObserver) LogWarn(msg string, args ...any)  {}
 func (o *upgradeObserver) LogError(msg string, args ...any) {}
 

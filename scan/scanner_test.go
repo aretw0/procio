@@ -272,6 +272,7 @@ func (baseObserver) OnProcessFailed(error)   {}
 func (baseObserver) OnIOError(string, error) {}
 func (baseObserver) OnScanError(error)       {}
 func (baseObserver) LogDebug(string, ...any) {}
+func (baseObserver) LogInfo(string, ...any)  {}
 func (baseObserver) LogWarn(string, ...any)  {}
 func (baseObserver) LogError(string, ...any) {}
 

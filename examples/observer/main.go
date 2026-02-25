@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"time"
 
 	"github.com/aretw0/procio"
@@ -38,6 +37,10 @@ func (o *customObserver) LogDebug(msg string, args ...any) {
 	o.logger.Printf("[DEBUG] "+msg, args...)
 }
 
+func (o *customObserver) LogInfo(msg string, args ...any) {
+	o.logger.Printf("[INFO] "+msg, args...)
+}
+
 func (o *customObserver) LogWarn(msg string, args ...any) {
 	o.logger.Printf("[WARN] "+msg, args...)
 }
@@ -61,7 +64,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, "ping", "127.0.0.1")
+	cmd := proc.NewCmd(ctx, "ping", "127.0.0.1")
 	if err := proc.Start(cmd); err != nil {
 		fmt.Printf("Process start failed (expected on some systems): %v\n", err)
 	} else {

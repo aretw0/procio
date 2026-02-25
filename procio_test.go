@@ -18,6 +18,7 @@ func (o *spyObserver) OnProcessFailed(err error)        { o.processFailed = appe
 func (o *spyObserver) OnIOError(op string, err error)   { o.ioErrors = append(o.ioErrors, op) }
 func (o *spyObserver) OnScanError(err error)            { o.scanErrors = append(o.scanErrors, err) }
 func (o *spyObserver) LogDebug(msg string, args ...any) { o.debugMsgs = append(o.debugMsgs, msg) }
+func (o *spyObserver) LogInfo(msg string, args ...any)  {}
 func (o *spyObserver) LogWarn(msg string, args ...any)  {}
 func (o *spyObserver) LogError(msg string, args ...any) {}
 
