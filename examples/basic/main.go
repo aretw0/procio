@@ -21,7 +21,7 @@ func main() {
 	// On Windows, 'ping -n 1 127.0.0.1' takes a second.
 	// On Linux, 'ping -c 1 127.0.0.1' takes a second.
 	cmd := proc.NewCmd(ctx, "ping", "127.0.0.1")
-	if err := proc.Start(cmd); err != nil {
+	if err := cmd.Start(); err != nil {
 		fmt.Printf("Note: Could not start 'ping' (expected on some restricted environments): %v\n", err)
 	} else {
 		fmt.Println("Process started. It will be killed by the OS if this app crashes.")

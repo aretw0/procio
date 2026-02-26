@@ -28,7 +28,7 @@ import "github.com/aretw0/procio/proc"
 
 cmd := proc.NewCmd(ctx, "long-running-worker")
 // Uses Pdeathsig (Linux) or Job Objects (Windows) to enforce cleanup
-err := proc.Start(cmd)
+err := cmd.Start()
 ```
 
 ### Reading Input Robustly
@@ -77,7 +77,7 @@ subCtx, subCancel := context.WithTimeout(appCtx, 10*time.Second)
 defer subCancel()
 
 cmd := proc.NewCmd(subCtx, "worker")
-if err := proc.Start(cmd); err != nil {
+if err := cmd.Start(); err != nil {
     log.Fatal(err)
 }
 cmd.Wait()
@@ -97,7 +97,7 @@ Wrap interactive applications:
 ```go
 import "github.com/aretw0/procio/pty"
 
-cmd := proc.NewCmd(ctx, "vim")
+cmd := exec.CommandContext(ctx, "vim")
 p, err := pty.StartPTY(cmd)
 // Forward p.Controller to/from host Stdin/Stdout
 ```

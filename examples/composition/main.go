@@ -49,18 +49,18 @@ func main() {
 	fmt.Println("\n✓ Application stopped gracefully.")
 }
 
-func startBackgroundProcess(ctx context.Context) *exec.Cmd {
+func startBackgroundProcess(ctx context.Context) *proc.Cmd {
 	// On Windows: timeout 30
 	// On Linux: sleep 30
-	var cmd *exec.Cmd
+	var cmd *proc.Cmd
 	if _, err := exec.LookPath("timeout"); err == nil {
 		cmd = proc.NewCmd(ctx, "timeout", "30")
 	} else {
 		cmd = proc.NewCmd(ctx, "sleep", "30")
 	}
 
-	if err := proc.Start(cmd); err != nil {
-		fmt.Printf("⚠️  Could not start background process: %v\n", err)
+	if err := cmd.Start(); err != nil {
+		fmt.Printf("Falha ao iniciar comando: %v\n", err)
 		return nil
 	}
 
@@ -79,7 +79,7 @@ func startBackgroundProcess(ctx context.Context) *exec.Cmd {
 	return cmd
 }
 
-func handleCommand(line string, cmd *exec.Cmd) {
+func handleCommand(line string, cmd *proc.Cmd) {
 	switch line {
 	case "status":
 		if cmd == nil {

@@ -38,7 +38,7 @@ func ExampleNewCmd() {
 	// It is the recommended entry point: no need to import os/exec directly.
 	cmd := proc.NewCmd(ctx, "echo", "hello new cmd")
 
-	if err := proc.Start(cmd); err != nil {
+	if err := cmd.Start(); err != nil {
 		fmt.Println("Error starting process:", err)
 		return
 	}

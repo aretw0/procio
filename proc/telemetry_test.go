@@ -2,7 +2,6 @@ package proc_test
 
 import (
 	"context"
-	"os/exec"
 	"runtime"
 	"testing"
 	"time"
@@ -15,11 +14,11 @@ func TestMonitor(t *testing.T) {
 	defer cancel()
 
 	cmd := getSleepCmd(ctx)
-	if err := proc.Start(cmd); err != nil {
+	if err := cmd.Start(); err != nil {
 		t.Fatalf("Start failed: %v", err)
 	}
 
-	ch, err := proc.Monitor(ctx, cmd, 100*time.Millisecond)
+	ch, err := proc.Monitor(ctx, cmd.Cmd, 100*time.Millisecond)
 	if err != nil {
 		t.Fatalf("Monitor failed: %v", err)
 	}
@@ -52,13 +51,13 @@ func TestMonitor(t *testing.T) {
 
 func TestMonitor_NotStarted(t *testing.T) {
 	cmd := proc.NewCmd(context.Background(), "echo")
-	_, err := proc.Monitor(context.Background(), cmd, time.Second)
+	_, err := proc.Monitor(context.Background(), cmd.Cmd, time.Second)
 	if err == nil {
 		t.Error("Expected error calling Monitor on unstarted process, got nil")
 	}
 }
 
-func getSleepCmd(ctx context.Context) *exec.Cmd {
+func getSleepCmd(ctx context.Context) *proc.Cmd {
 	if runtime.GOOS == "windows" {
 		return proc.NewCmd(ctx, "powershell", "-Command", "Start-Sleep -Seconds 3")
 	}

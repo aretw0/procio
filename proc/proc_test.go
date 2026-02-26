@@ -87,7 +87,7 @@ func TestNewCmd(t *testing.T) {
 	cmd := proc.NewCmd(ctx, os.Args[0], "child")
 	cmd.Env = append(os.Environ(), HelperProcess+"=1")
 
-	if err := proc.Start(cmd); err != nil {
+	if err := cmd.Start(); err != nil {
 		t.Fatalf("proc.Start(proc.NewCmd(...)) failed: %v", err)
 	}
 	if cmd.Process == nil {
@@ -104,7 +104,7 @@ func TestNewCmd_ContextCancellation(t *testing.T) {
 	cmd := proc.NewCmd(ctx, os.Args[0], "child")
 	cmd.Env = append(os.Environ(), HelperProcess+"=1")
 
-	if err := proc.Start(cmd); err != nil {
+	if err := cmd.Start(); err != nil {
 		t.Fatalf("proc.Start failed: %v", err)
 	}
 

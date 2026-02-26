@@ -16,8 +16,8 @@ procio/
 
 | Function | Purpose |
 |---|---|
-| `NewCmd(ctx, name, args...)` | Recommended constructor. Wraps `exec.CommandContext`; returns `*exec.Cmd` pre-linked to `ctx`. |
-| `Start(cmd)` | Applies platform hygiene and launches. Must be called after `NewCmd`. |
+| `NewCmd(ctx, name, args...)` | Recommended constructor. Wraps `exec.CommandContext`; returns `*proc.Cmd` pre-linked to `ctx`, enforcing safety on `Start()`. |
+| `Start(cmd)` | Applies platform hygiene and launches an `exec.Cmd`. Implicitly called by `proc.Cmd.Start()`. |
 | `Monitor(ctx, cmd, interval)`| Streams real-time `Metrics` (CPU%, MemRSS) from the running process to a channel. |
 
 ### `pty`
@@ -79,7 +79,7 @@ graph LR
 
 ### 1. Observer Bridge
 
-The `Observer` interface (root package) is the **telemetry contract**. Consumers implement it in their own package; `procio` never imports any logger. Since v0.4.0, `lifecycle.Observer` is a drop-in implementation — it satisfies `procio.Observer` directly with no glue code:
+The `Observer` interface (root package) is the **telemetry contract**. Consumers implement it in their own package; `procio` never imports any logger. `lifecycle.Observer` is a superset and satisfies `procio.Observer` directly with no glue code:
 
 ```go
 var _ procio.Observer = (*MyObserver)(nil) // compile-time check
@@ -105,10 +105,11 @@ The canonical pattern for embedding `proc.Start` inside a `lifecycle.Worker`:
 
 ```go
 func (w *MyWorker) Start(ctx context.Context) error {
-    // Use proc.NewCmd, NOT exec.Command — binds context cancellation.
+    // Use proc.NewCmd, NOT exec.Command — binds context cancellation
+    // and inherently guarantees hygiene when w.cmd.Start() is called.
     w.cmd = proc.NewCmd(ctx, w.binary, w.args...)
     w.cmd.Stdout = w.stdout
-    return proc.Start(w.cmd)
+    return w.cmd.Start()
 }
 ```
 

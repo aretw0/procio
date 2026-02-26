@@ -58,7 +58,6 @@ func (b *ObserverBridge) OnScanError(err error) {
 }
 
 func (b *ObserverBridge) LogDebug(msg string, args ...any) { b.logger.Debug(msg, args...) }
-func (b *ObserverBridge) LogInfo(msg string, args ...any)  { b.logger.Info(msg, args...) }
 func (b *ObserverBridge) LogWarn(msg string, args ...any)  { b.logger.Warn(msg, args...) }
 func (b *ObserverBridge) LogError(msg string, args ...any) { b.logger.Error(msg, args...) }
 
@@ -87,7 +86,7 @@ func runProcess(ctx context.Context, binary string, args ...string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	if err := proc.Start(cmd); err != nil {
+	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("start %s: %w", binary, err)
 	}
 	return cmd.Wait()

@@ -14,7 +14,7 @@ func main() {
     ctx := context.Background()
     // proc.NewCmd = exec.CommandContext + platform hygiene (Job Objects / Pdeathsig)
     cmd := proc.NewCmd(ctx, "sleep", "100")
-    if err := proc.Start(cmd); err != nil {
+    if err := cmd.Start(); err != nil {
         log.Fatal(err)
     }
     cmd.Wait() // wait or let context kill it
@@ -91,7 +91,7 @@ func runWorker(appCtx context.Context) error {
     cmd.Stdout = os.Stdout
     cmd.Stderr = os.Stderr
 
-    if err := proc.Start(cmd); err != nil {
+    if err := cmd.Start(); err != nil {
         return fmt.Errorf("start worker: %w", err)
     }
     return cmd.Wait()
@@ -120,7 +120,7 @@ func main() {
 
     // Pipe stdout to a scanner for line-by-line processing.
     stdout, _ := cmd.StdoutPipe()
-    if err := proc.Start(cmd); err != nil {
+    if err := cmd.Start(); err != nil {
         log.Fatal(err)
     }
 
@@ -149,7 +149,7 @@ import (
 
 func main() {
     ctx := context.Background()
-    cmd := proc.NewCmd(ctx, "vim")
+    cmd := exec.CommandContext(ctx, "vim")
     
     // Allocate PTY and attach it to the command
     p, err := pty.StartPTY(cmd)
@@ -186,7 +186,7 @@ import (
 func main() {
     ctx := context.Background()
     cmd := proc.NewCmd(ctx, "long-running-task")
-    proc.Start(cmd)
+    cmd.Start()
 
     // Monitor emits metrics every second
     ch, _ := proc.Monitor(ctx, cmd, time.Second)
@@ -236,7 +236,7 @@ func main() {
 
     // Use proc.NewCmd (not exec.Command) to bind context cancellation.
     cmd := proc.NewCmd(ctx, "long-running-service", "--flag")
-    if err := proc.Start(cmd); err != nil {
+    if err := cmd.Start(); err != nil {
         slog.Error("could not start", "err", err)
         return
     }

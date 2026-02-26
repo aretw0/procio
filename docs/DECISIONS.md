@@ -92,7 +92,7 @@ loam / trellis  (Application layer — use lifecycle.ProcessWorker)
 
 1. **Single responsibility**: `procio` handles "how to start a process safely"; `lifecycle` handles "when and why to start it, and what to do when it fails". Mixing these concerns in `loam`/`trellis` creates tight coupling.
 2. **No adapter package needed**: The bridge between `procio` and `lifecycle` is achieved via the `Observer` interface (caller owns the adapter, `procio` does not). This keeps `procio` dependency-free and avoids circular imports.
-3. **`Observer.LogInfo` alignment**: Prior to v0.4.0, `procio.Observer` was missing `LogInfo`, causing `lifecycle.Observer` implementations to require an explicit wrapper. Adding `LogInfo` to `procio.Observer` makes `lifecycle.Observer` a **drop-in** implementation with no glue code.
+3. **`Observer.LogInfo` alignment**: First introduced in v0.4.0, but later reversed in **v0.4.1**, `procio.Observer` is strictly decoupled from opinionated logging levels. `lifecycle.Observer` simply operates as a superset (having `LogInfo`, `OnGoroutinePanicked`, etc.) and thus implicitly satisfies `procio.Observer` natively with no extra wrapper.
 
 **Consequences:**
 

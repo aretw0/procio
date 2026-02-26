@@ -44,6 +44,11 @@
 - [x] **Integration Points** section in `TECHNICAL.md`: Formally describe the three integration boundaries (Observer Bridge, Context Contract, Worker Contract).
 - [x] **`examples/lifecycle_bridge/`**: Compilable example acting as a compile-time contract test for the `ObserverBridge` pattern.
 
+### v0.4.1 (API Safety & Decoupling)
+
+- [x] **API Safety:** Enveloped `*exec.Cmd` returned by `proc.NewCmd` into a proprietary `*proc.Cmd`, overriding `Start`, `Run`, `Output` and `CombinedOutput` to implicitly apply platform hygiene (preventing accidental raw calls).
+- [x] **Interface Decoupling:** Removed `LogInfo` from the `Observer` interface to keep the telemetry contract strictly bound to process/io events and decoupled from opinionated logging levels.
+
 ### v0.5.0 (Production Feedback Loop)
 
 - [ ] **Production Feedback Loop:** Gather real-world usage data and address edge cases.

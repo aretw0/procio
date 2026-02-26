@@ -33,10 +33,10 @@ type Metrics struct {
 // Example:
 //
 //	cmd := proc.NewCmd(ctx, "worker", "--config", "prod.yaml")
-//	if err := proc.Start(cmd); err != nil {
+//	if err := cmd.Start(); err != nil {
 //	    log.Fatal(err)
 //	}
-//	ch, err := proc.Monitor(ctx, cmd, time.Second)
+//	ch, err := proc.Monitor(ctx, cmd.Cmd, time.Second)
 //	if err != nil {
 //	    log.Fatal(err)
 //	}

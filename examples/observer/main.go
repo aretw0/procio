@@ -65,7 +65,7 @@ func main() {
 	defer cancel()
 
 	cmd := proc.NewCmd(ctx, "ping", "127.0.0.1")
-	if err := proc.Start(cmd); err != nil {
+	if err := cmd.Start(); err != nil {
 		fmt.Printf("Process start failed (expected on some systems): %v\n", err)
 	} else {
 		go func() {

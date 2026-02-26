@@ -11,7 +11,7 @@
 //
 //	cmd := proc.NewCmd(ctx, "worker", "--config", "prod.yaml")
 //	cmd.Stdout = os.Stdout // configure before starting
-//	if err := proc.Start(cmd); err != nil {
+//	if err := cmd.Start(); err != nil {
 //	    log.Fatal(err)
 //	}
 //	cmd.Wait()
