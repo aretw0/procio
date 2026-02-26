@@ -49,6 +49,13 @@
 - [x] **API Safety:** Enveloped `*exec.Cmd` returned by `proc.NewCmd` into a proprietary `*proc.Cmd`, overriding `Start`, `Run`, `Output` and `CombinedOutput` to implicitly apply platform hygiene (preventing accidental raw calls).
 - [x] **Interface Decoupling:** Removed `LogInfo` from the `Observer` interface to keep the telemetry contract strictly bound to process/io events and decoupled from opinionated logging levels.
 
+### v0.4.2 (Patch): IOObserver Composition
+
+**Focus**: Refactor `Observer` to support granular composition. This allows consumers like `lifecycle` to implement clean "Feature Discovery" for I/O hooks without forcing a fat interface implementation.
+
+- [x] **`IOObserver` Interface**: Extract `OnIOError` and `OnScanError` into a dedicated `IOObserver` interface.
+- [x] **Composition**: Update `Observer` to embed `IOObserver`. This keeps `procio.SetObserver(Observer)` backward compatible while allowing `lifecycle` to type-assert against `IOObserver` specifically.
+
 ### v0.5.0 (Production Feedback Loop)
 
 - [ ] **Production Feedback Loop:** Gather real-world usage data and address edge cases.

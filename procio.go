@@ -1,12 +1,17 @@
 package procio
 
+// IOObserver defines hooks for low-level process I/O events.
+type IOObserver interface {
+	OnIOError(op string, err error)
+	OnScanError(err error)
+}
+
 // Observer allows external packages to plug in observability (logs, metrics)
 // without coupling this module to specific implementations.
 type Observer interface {
+	IOObserver
 	OnProcessStarted(pid int)
 	OnProcessFailed(err error)
-	OnIOError(op string, err error)
-	OnScanError(err error)
 	LogDebug(msg string, args ...any)
 	LogWarn(msg string, args ...any)
 	LogError(msg string, args ...any)
