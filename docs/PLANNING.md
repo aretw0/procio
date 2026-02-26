@@ -56,9 +56,13 @@
 - [x] **`IOObserver` Interface**: Extract `OnIOError` and `OnScanError` into a dedicated `IOObserver` interface.
 - [x] **Composition**: Update `Observer` to embed `IOObserver`. This keeps `procio.SetObserver(Observer)` backward compatible while allowing `lifecycle` to type-assert against `IOObserver` specifically.
 
-### v0.5.0 (Production Feedback Loop)
+### v0.5.0 (Hardening & Determinism)
 
-- [ ] **Production Feedback Loop:** Gather real-world usage data and address edge cases.
+**Focus**: Attack the volatility of "Fake EOF" heuristics and ensure goroutine hygiene. This release addresses the core stability concerns identified during the critical analysis.
+
+- [ ] **Deterministic EOF**: Implement `WithProcess(cmd *proc.Cmd)` in `scan.Scanner` to verify true EOF via process liveness checks.
+- [ ] **Telemetry Safety**: enforce a minimum sampling interval (floor) in `Monitor` to prevent CPU exhaustion.
+- [ ] **Stress Testing**: add rigorous tests for chaotic signal/IO scenarios.
 
 ### v0.6.0 (API Stabilization)
 
