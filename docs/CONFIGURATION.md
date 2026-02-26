@@ -46,3 +46,5 @@ The `scan.Scanner` has internal defaults that can be adjusted via options:
 
 - `WithBufferSize(size int)`: Sets the read buffer size.
 - `WithThreshold(count int)`: Sets the consecutive EOF threshold for Windows "fake EOF" detection.
+- `WithProcess(cmd *proc.Cmd)`: Binds the scanner to a process for deterministic EOF detection (v0.5.0+).
+- `WithProcessLiveness(fn func() bool)`: Binds any liveness check for deterministic EOF (v0.5.0+).

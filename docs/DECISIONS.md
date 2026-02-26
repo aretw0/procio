@@ -101,3 +101,14 @@ loam / trellis  (Application layer — use lifecycle.ProcessWorker)
 - Future `procio` releases must remain backwards-compatible with `lifecycle`'s usage surface (`proc.Start`, `proc.NewCmd`, `termio.InterruptibleReader`, `scan.Scanner`).
 
 On Linux, `grantpt()` is effectively a no-op because the kernel `devpts` filesystem automatically sets correct ownership and permissions on the worker device when `/dev/ptmx` is opened. On Darwin (macOS), this step is **mandatory**: the worker side (`/dev/ttysN`) starts with restrictive root-only permissions and requires the `TIOCPTYGRANT` ioctl on the controller fd before it can be opened by the calling process. Omitting it causes `open worker: permission denied`. A subsequent `TIOCPTYUNLK` ioctl is also needed to unlock the worker. This distinction drove the split of the POSIX PTY implementation into platform-specific files (`pty_linux.go`, `pty_darwin.go`, `pty_bsd.go`).
+
+## 12. Deterministic EOF via Process Liveness (v0.5.0)
+
+**Context:** Heuristics based on "threshold counts" (ADR-3) are inherently non-deterministic. If a system is under extremely high load or if multiple signals are rapidly delivered, the threshold might be exceeded prematurely, or a true EOF might be delayed.
+
+**Decision:** Allow the `scan.Scanner` to be explicitly bound to the lifecycle of the process providing the data. By passing `WithProcess(cmd)` or `WithProcessLiveness(fn)`, the scanner can perform a syscall (or check a state bit) to verify if the source is still alive before deciding how to treat a 0-byte read.
+
+- If the process is **Alive**: A 0-byte read is treated as a transient interrupt (Fake EOF).
+- If the process is **Dead**: A 0-byte read is treated as a True EOF.
+
+This eliminates "flakiness" and allows for a more aggressive (lower) threshold or even zero-threshold polling on systems that support precise liveness checks.

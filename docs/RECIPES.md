@@ -124,10 +124,13 @@ func main() {
         log.Fatal(err)
     }
 
-    scanner := scan.NewScanner(stdout, scan.WithLineHandler(func(line string) {
-        fmt.Println("[log]", line)
-    }))
-    scanner.Start(ctx) // blocks until ctx is done or pipe closes
+    scanner := scan.NewScanner(stdout, 
+        scan.WithProcess(cmd), // v0.5.0+: deterministic EOF detection
+        scan.WithLineHandler(func(line string) {
+            fmt.Println("[log]", line)
+        }),
+    )
+    scanner.Start(ctx) // blocks until process exits, ctx is done, or pipe closes
 
     cmd.Wait()
 }

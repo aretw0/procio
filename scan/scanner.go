@@ -11,8 +11,9 @@ import (
 	"github.com/aretw0/procio/termio"
 )
 
-// Scanner reads lines from an io.Reader (like Stdin) with robust error handling
-// and "Fake EOF" protection for Windows environments.
+// Scanner reads lines from an io.Reader (typically os.Stdin) with robust
+// behavior for interactive environments, featuring Context-awareness and
+// "Deterministic EOF" protection.
 type Scanner struct {
 	r             io.Reader
 	bufSize       int
@@ -24,6 +25,7 @@ type Scanner struct {
 	onLine        func(line string)
 	onClear       func()
 	onError       func(err error)
+	isAlive       func() bool
 }
 
 // Option configures the Scanner.
@@ -89,6 +91,25 @@ func WithErrorHandler(fn func(err error)) Option {
 func WithInterruptible() Option {
 	return func(s *Scanner) {
 		s.interruptible = true
+	}
+}
+
+// LivenessChecker is a function that returns true if the source process is still running.
+type LivenessChecker func() bool
+
+// WithProcessLiveness binds an external liveness check to the scanner.
+// When an EOF is encountered, the scanner will use this check to decide if
+// it's a real exit or a transient interruption.
+func WithProcessLiveness(check LivenessChecker) Option {
+	return func(s *Scanner) {
+		s.isAlive = check
+	}
+}
+
+// WithProcess is a convenience wrapper that binds a *procio.Cmd liveness to the scanner.
+func WithProcess(p interface{ IsAlive() bool }) Option {
+	return func(s *Scanner) {
+		s.isAlive = p.IsAlive
 	}
 }
 
@@ -188,6 +209,18 @@ func (s *Scanner) handleReadError(err error, lineBuilder *strings.Builder) bool 
 }
 
 func (s *Scanner) handleEOF() bool {
+	// If we have a liveness check, use it to bypass the threshold heuristics.
+	if s.isAlive != nil {
+		if !s.isAlive() {
+			// Process is definitely dead. This is a TRUE EOF.
+			return true
+		}
+		// Process is still alive. This EOF is "Fake" (likely transient signal handling).
+		// We ignore the threshold and just backoff.
+		time.Sleep(s.backoff)
+		return false
+	}
+
 	s.eofCount++
 
 	// threshold exceeded: stop the source

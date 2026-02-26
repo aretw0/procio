@@ -47,6 +47,10 @@ func Monitor(ctx context.Context, cmd *exec.Cmd, interval time.Duration) (<-chan
 	if cmd.Process == nil {
 		return nil, errProcessNotStarted
 	}
+	// Safety floor: prevent tight loops that could exhaust CPU.
+	if interval < 10*time.Millisecond {
+		interval = 10 * time.Millisecond
+	}
 	ch := make(chan Metrics)
 	go monitorLoop(ctx, cmd.Process.Pid, interval, ch)
 	return ch, nil

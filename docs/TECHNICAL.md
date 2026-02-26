@@ -42,7 +42,7 @@ procio/
 ### `scan`
 
 - **Scanner**: A context-aware replacement for `bufio.Scanner`.
-- **Fake EOF**: On Windows, Ctrl+C can trigger a transient EOF. The scanner implements a counter-based heuristic (`threshold`) to differentiate transient interrupts from true stream end.
+- **Deterministic EOF**: In addition to threshold-based heuristics, `v0.5.0` allows linking a scanner to a process liveness check (`WithProcess`). This enables deterministic differentiation between transient interrupts (Ctrl+C) and true stream termination.
 
 ## Observability
 

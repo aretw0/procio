@@ -11,7 +11,7 @@ It provides three core primitives:
 
 - **proc**: Leak-free process management (ensures child processes die when parent dies).
 - **termio**: Interruptible terminal I/O (handling interrupts and safe terminal handles).
-- **scan**: Robust input scanning with protection against "Fake EOF" signals on Windows.
+- **scan**: Robust input scanning with deterministic protection against "Fake EOF" signals on Windows.
 
 ## Installation
 
@@ -31,13 +31,14 @@ cmd := proc.NewCmd(ctx, "long-running-worker")
 err := cmd.Start()
 ```
 
-### Reading Input Robustly
+### Reading Input Robustly (Hardened)
 
 ```go
 import "github.com/aretw0/procio/scan"
 
-scanner := scan.NewScanner(os.Stdin)
-scanner.Start(ctx) // Handles transient interrupts
+// Binds scanner to process liveness for deterministic EOF detection
+scanner := scan.NewScanner(os.Stdin, scan.WithProcess(cmd))
+scanner.Start(ctx) 
 ```
 
 ### Enabling TTY Cancellation
