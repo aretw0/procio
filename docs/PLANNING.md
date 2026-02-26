@@ -60,9 +60,9 @@
 
 **Focus**: Attack the volatility of "Fake EOF" heuristics and ensure goroutine hygiene. This release addresses the core stability concerns identified during the critical analysis.
 
-- [ ] **Deterministic EOF**: Implement `WithProcess(cmd *proc.Cmd)` in `scan.Scanner` to verify true EOF via process liveness checks.
-- [ ] **Telemetry Safety**: enforce a minimum sampling interval (floor) in `Monitor` to prevent CPU exhaustion.
-- [ ] **Stress Testing**: add rigorous tests for chaotic signal/IO scenarios.
+- [x] **Deterministic EOF**: Implement `WithProcess(cmd *proc.Cmd)` in `scan.Scanner` to verify true EOF via process liveness checks.
+- [x] **Telemetry Safety**: enforce a minimum sampling interval (floor) in `Monitor` to prevent CPU exhaustion.
+- [x] **Stress Testing**: add rigorous tests for chaotic signal/IO scenarios.
 
 ### v0.6.0 (API Stabilization)
 
