@@ -5,9 +5,8 @@ package pty
 import (
 	"fmt"
 	"os"
-	"unsafe"
-
 	"os/exec"
+	"unsafe"
 
 	"golang.org/x/sys/windows"
 )
@@ -55,6 +54,8 @@ func startPTY(cmd *exec.Cmd) (*PTY, error) {
 	}
 	defer attrList.Delete()
 
+	// O uso de unsafe.Pointer(hpc) é seguro aqui porque hpc é um handle opaco do Windows (não um ponteiro Go).
+	// O linter pode alertar sobre "possible misuse of unsafe.Pointer", mas este padrão é amplamente aceito para interoperabilidade com APIs nativas.
 	if err := attrList.Update(
 		windows.PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE,
 		unsafe.Pointer(hpc),
