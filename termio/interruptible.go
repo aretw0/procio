@@ -90,7 +90,8 @@ func IsInterrupted(err error) bool {
 		return true
 	}
 	// Fallback for string-based errors (only shallow check)
-	if err.Error() == "interrupted" {
+	errMsg := err.Error()
+	if errMsg == "interrupted" || errMsg == "signal: interrupt" || errMsg == "signal: killed" {
 		return true
 	}
 	return false
